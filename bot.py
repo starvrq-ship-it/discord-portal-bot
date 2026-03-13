@@ -1,47 +1,53 @@
+import json
 import discord
 from discord.ext import commands
 from discord import app_commands
 import os
 
 intents = discord.Intents.default()
+intents.message_content = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# leaderboard storage
-review_counts = {}
+try:
+    with open("reviews.json", "r") as f:
+        review_counts = json.load(f)
+except:
+    review_counts = {}
 
-# put your log channel ID here
-LOG_CHANNEL_ID = 1466266915671379988
+GUILD_ID = 1418404678777180303  # your server ID
+REVIEW_CHANNEL_ID = 1430705928012824697  # review channel ID
 
 
-class ReviewModal(discord.ui.Modal, title="Submit Mass Review"):
+class ReviewModal(discord.ui.Modal, title="Mass Review"):
+
+    server_link = discord.ui.TextInput(
+        label="Server Invite Link",
+        placeholder="https://discord.gg/...",
+        required=True
+    )
+    
 
     invites = discord.ui.TextInput(
-        label="Invites gained",
+        label="Invites Gained",
         placeholder="Numbers only",
         required=True
     )
 
     portals = discord.ui.TextInput(
-        label="Portals posted",
+        label="Portals Posted",
         placeholder="Numbers only",
         required=True
     )
 
     sep = discord.ui.TextInput(
-        label="Sep posted (hours)",
+        label="Sep Posted (hours)",
         placeholder="Numbers only",
-        required=True
-    )
-
-    server_link = discord.ui.TextInput(
-        label="Server link",
-        placeholder="Paste the server invite link",
         required=True
     )
 
     async def on_submit(self, interaction: discord.Interaction):
 
-        # validate numbers
         if not self.invites.value.isdigit() or not self.portals.value.isdigit() or not self.sep.value.isdigit():
             await interaction.response.send_message(
                 "Invites, portals, and sep must be numbers only.",
@@ -49,73 +55,90 @@ class ReviewModal(discord.ui.Modal, title="Submit Mass Review"):
             )
             return
 
-        invites = self.invites.value
-        portals = self.portals.value
-        sep = self.sep.value
+        invites = int(self.invites.value)
+        portals = int(self.portals.value)
+        sep = int(self.sep.value)
         server_link = self.server_link.value
 
-        user = interaction.user.mention
+        user_id = str(interaction.user.id)
 
-        message = f"""
+        review_counts[user_id] = review_counts.get(user_id, 0) + 1
+
+        with open("reviews.json", "w") as f:
+            json.dump(review_counts, f)
+
+        channel = interaction.guild.get_channel(REVIEW_CHANNEL_ID)
+
+        message_text = f"""
 _ _
- 　 　𝄞 　 `🎧`　　　{user} has [massed]({server_link})
--# _ _  　 　 {invites}i  +  {portals}p  for  {sep}h  sep
+ 　 　𝄞 　 `🎧`　　　{interaction.user.mention} has [massed]({self.server_link.value})
+-# _ _  　 　 {invites}i　 +  {portals}p  for  {sep}h  sep
 
   　 　 　ㅤ ׅ  ▶• ılıılıılılılıılıılı. 0 𝅄ㅤ
 """
 
-        await interaction.response.send_message(message)
+        msg = await channel.send(message_text)
 
-        sent_message = await interaction.original_response()
-
-        # create thread
-        await sent_message.create_thread(
-            name=f"{interaction.user.name}'s mass review"
+        await msg.create_thread(
+            name=f"review - {interaction.user.name}"
         )
 
-        # update leaderboard
-        review_counts[interaction.user.id] = review_counts.get(interaction.user.id, 0) + 1
-
-        # log to staff channel
-        log_channel = bot.get_channel(LOG_CHANNEL_ID)
-
-        if log_channel:
-            await log_channel.send(
-                f"{interaction.user} submitted a review\n"
-                f"Invites: {invites}\n"
-                f"Portals: {portals}\n"
-                f"Sep: {sep}\n"
-                f"Server: {server_link}"
-            )
-
-
-@bot.tree.command(name="review", description="Submit a mass review")
-async def review(interaction: discord.Interaction):
-    await interaction.response.send_modal(ReviewModal())
-
-
-@bot.tree.command(name="leaderboard", description="Show top massers")
-async def leaderboard(interaction: discord.Interaction):
-
-    if not review_counts:
-        await interaction.response.send_message("No reviews yet.", ephemeral=True)
-        return
-
-    sorted_users = sorted(review_counts.items(), key=lambda x: x[1], reverse=True)
-
-    text = "🏆 **Mass Leaderboard**\n\n"
-
-    for i, (user_id, count) in enumerate(sorted_users[:10], start=1):
-        user = await bot.fetch_user(user_id)
-        text += f"{i}. {user.name} — {count} masses\n"
-
-    await interaction.response.send_message(text)
+        await interaction.response.send_message(
+            "review submitted !",
+            ephemeral=True
+        )
 
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
+    guild = discord.Object(id=GUILD_ID)
+
+    bot.tree.clear_commands(guild=guild)  # removes old ones
+    bot.tree.copy_global_to(guild=guild)
+
+    await bot.tree.sync(guild=guild)
+
     print(f"Logged in as {bot.user}")
 
 
+@bot.tree.command(name="review", description="submit a mass review")
+async def review(interaction: discord.Interaction):
+    await interaction.response.send_modal(ReviewModal())
+
+@bot.tree.command(name="leaderboard", description="show top massers")
+async def leaderboard(interaction: discord.Interaction):
+
+    if not review_counts:
+        await interaction.response.send_message("no reviews yet.")
+        return
+
+    sorted_users = sorted(review_counts.items(), key=lambda x: x[1], reverse=True)
+
+    text = f"""_ _
+ 　 　 　⇆ 　 🏆 `　　　mass leaderboard
+-# _ _  　 　 　run　 /review  after  massing  to  log
+
+"""
+
+    for i, (user_id, count) in enumerate(sorted_users[:10], start=1):
+        user = await bot.fetch_user(int(user_id))
+        text += f"{i}. <@{user_id}> — {count} masses\n"
+
+    await interaction.response.send_message(text)
+
+@bot.tree.command(name="sync", description="Sync bot commands")
+async def sync(interaction: discord.Interaction):
+
+    guild = discord.Object(id=GUILD_ID)
+
+    await bot.tree.sync(guild=guild)
+
+    await interaction.response.send_message(
+        "Commands synced!",
+        ephemeral=True
+
+    )
+
+
+import os
 bot.run(os.getenv("TOKEN"))
