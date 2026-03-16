@@ -126,7 +126,7 @@ async def leaderboard(interaction: discord.Interaction):
 
     await interaction.response.send_message(text)
 
-@bot.tree.command(name="sync", description="Sync bot commands")
+@bot.tree.command(name="sync", description="sync bot commands")
 async def sync(interaction: discord.Interaction):
 
     guild = discord.Object(id=GUILD_ID)
@@ -134,7 +134,7 @@ async def sync(interaction: discord.Interaction):
     await bot.tree.sync(guild=guild)
 
     await interaction.response.send_message(
-        "Commands synced!",
+        "commands synced !",
         ephemeral=True
 
     )
@@ -143,7 +143,22 @@ async def sync(interaction: discord.Interaction):
 async def clearslash(ctx):
     bot.tree.clear_commands(guild=None)
     await bot.tree.sync()
-    await ctx.send("Cleared slash commands.")
+    await ctx.send("cleared slash commands.")
+
+@bot.tree.command(name="addpoints", description="add mass points to a user")
+@app_commands.describe(user="user to give points to", points="number of masses to add")
+async def addpoints(interaction: discord.Interaction, user: discord.Member, points: int):
+
+    if points <= 0:
+        await interaction.response.send_message("points must be a positive number.", ephemeral=True)
+        return
+
+    review_counts[user.id] = review_counts.get(user.id, 0) + points
+
+    await interaction.response.send_message(
+        f"✅ added **{points}** masses to {user.mention}.\n"
+        f"they now have **{review_counts[user.id]}** masses."
+    )
 
 import os
 bot.run(os.getenv("TOKEN"))
