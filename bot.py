@@ -145,6 +145,7 @@ async def clearslash(ctx):
     await bot.tree.sync()
     await ctx.send("cleared slash commands.")
 
+@app_commands.checks.has_permissions(manage_guild=True)
 @bot.tree.command(name="addpoints", description="add mass points to a user")
 @app_commands.describe(user="user to give points to", points="number of masses to add")
 async def addpoints(interaction: discord.Interaction, user: discord.Member, points: int):
@@ -155,10 +156,14 @@ async def addpoints(interaction: discord.Interaction, user: discord.Member, poin
 
     review_counts[user.id] = review_counts.get(user.id, 0) + points
 
-    await interaction.response.send_message(
-        f"✅ added **{points}** masses to {user.mention}.\n"
-        f"they now have **{review_counts[user.id]}** masses."
-    )
+    message = f"""
+⠀⠀⠀⠀⠀⠀ ࣪       ︵ֺ︵  ㅤ ㅤ𝜚      ۪ ⠀⠀ ⪩⪨
+⠀⠀⠀⠀⠀⠀୧⠀⠀ㅤ𓈒⠀⠀ ֺ    ✦     ࣭   ⠀﹙successful.﹚
+⠀⠀⠀⠀⠀⠀☆゙      ۪ ㅤ added **{points}** masses to {user.mention}.
+⠀⠀⠀⠀⠀⠀✸   ࿁ ⠀    ︩︪ ׅthey now have **{review_counts[user.id]}** masses.
+"""
+
+    await interaction.response.send_message(message)
 
 import os
 bot.run(os.getenv("TOKEN"))
