@@ -139,6 +139,11 @@ async def sync(interaction: discord.Interaction):
 
     )
 
+@bot.command()
+async def clearslash(ctx):
+    bot.tree.clear_commands(guild=None)
+    await bot.tree.sync()
+    await ctx.send("Cleared slash commands.")
 
 import os
 bot.run(os.getenv("TOKEN"))
