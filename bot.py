@@ -24,7 +24,22 @@ def save_data():
 
 GUILD_ID = 1418404678777180303  # your server ID
 REVIEW_CHANNEL_ID = 1430705928012824697  # review channel ID
+TICKET_LOG_CHANNEL = 1480708106827726929
 
+class CloseTicketView(discord.ui.View):
+    @discord.ui.button(label="close Ticket", style=discord.ButtonStyle.red)
+    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        await interaction.response.send_message("🔒 closing ticket in 5 seconds...")
+
+        await interaction.channel.edit(
+            overwrites={
+                interaction.guild.default_role: discord.PermissionOverwrite(view_channel=False)
+            }
+        )
+
+        await discord.utils.sleep_until(discord.utils.utcnow() + discord.timedelta(seconds=5))
+        await interaction.channel.delete()
 
 class ReviewModal(discord.ui.Modal, title="Mass Review"):
 
@@ -190,21 +205,55 @@ async def ticket(interaction: discord.Interaction):
     }
 
     channel = await guild.create_text_channel(
-        name=f"w2p-{user.name}",
+        name=f"﹒w2p﹒{user.name}",
         category=category,
         overwrites=overwrites
     )
 
-    message = f"""
+    await channel.send(user.mention, delete_after=5)
+
+    await channel.send(
+"""
 _ _
 _ _                               _ _        opened   __a__  ticket 
 _ _                     run  ` .mass  `  to  start   ~~      ~~   massing
 _ _                       ﹒    i hope you enjoy massing !*!*
+_ _
+""",)
+
+class CloseTicketView(discord.ui.View):
+    @discord.ui.button(label="close ticket", style=discord.ButtonStyle.blue)
+    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        user = interaction.user
+        channel = interaction.channel
+        guild = interaction.guild
+
+        log_channel = guild.get_channel(TICKET_LOG_CHANNEL)
+
+        if log_channel:
+            await log_channel.send(
+f"""
+ 　 　 　⇆ `　　　ticket closed
+
+User: {user.mention}
+Channel: {channel.name}
+Closed By: {interaction.user.mention}
 """
+            )
 
-    await channel.send(f"{user.mention}\n{message}")
+        await interaction.response.send_message("🔒 slosing ticket in 5 seconds...")
 
-    await interaction.response.send_message(
+        await channel.edit(
+            overwrites={
+                guild.default_role: discord.PermissionOverwrite(view_channel=False)
+            }
+        )
+
+        await discord.utils.sleep_until(discord.utils.utcnow() + discord.timedelta(seconds=5))
+        await channel.delete()
+
+        await interaction.response.send_message(
         f"ticket created: {channel.mention}",
         ephemeral=True
     )
