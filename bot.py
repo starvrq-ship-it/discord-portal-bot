@@ -222,7 +222,7 @@ _ _
 """,)
 
 class CloseTicketView(discord.ui.View):
-    @discord.ui.button(label="close ticket", style=discord.ButtonStyle.blue)
+    @discord.ui.button(label="close ticket", style=discord.ButtonStyle.red)
     async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
 
         user = interaction.user
