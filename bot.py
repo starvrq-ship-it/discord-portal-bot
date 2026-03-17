@@ -1,7 +1,7 @@
-import json
 import discord
 from discord.ext import commands
 from discord import app_commands
+import json
 import os
 
 intents = discord.Intents.default()
@@ -9,11 +9,18 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-try:
-    with open("reviews.json", "r") as f:
-        review_counts = json.load(f)
-except:
-    review_counts = {}
+def load_data():
+    try:
+        with open("leaderboard.json", "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+review_counts = load_data()
+
+def save_data():
+    with open("leaderboard.json", "w") as f:
+        json.dump(review_counts, f)
 
 GUILD_ID = 1418404678777180303  # your server ID
 REVIEW_CHANNEL_ID = 1430705928012824697  # review channel ID
@@ -121,7 +128,6 @@ async def leaderboard(interaction: discord.Interaction):
 """
 
     for i, (user_id, count) in enumerate(sorted_users[:10], start=1):
-        user = await bot.fetch_user(int(user_id))
         text += f"{i}. <@{user_id}> — {count} masses\n"
 
     await interaction.response.send_message(text)
@@ -154,16 +160,54 @@ async def addpoints(interaction: discord.Interaction, user: discord.Member, poin
         await interaction.response.send_message("points must be a positive number.", ephemeral=True)
         return
 
-    review_counts[user.id] = review_counts.get(user.id, 0) + points
+    review_counts[str(user.id)] = review_counts.get(str(user.id), 0) + points
+    save_data()
 
     message = f"""
-⠀⠀⠀⠀⠀⠀ ࣪       ︵ֺ︵  ㅤ ㅤ𝜚      ۪ ⠀⠀ ⪩⪨
-⠀⠀⠀⠀⠀⠀୧⠀⠀ㅤ𓈒⠀⠀ ֺ    ✦     ࣭   ⠀﹙successful.﹚
-⠀⠀⠀⠀⠀⠀☆゙      ۪ ㅤ added **{points}** masses to {user.mention}.
-⠀⠀⠀⠀⠀⠀✸   ࿁ ⠀    ︩︪ ׅthey now have **{review_counts[user.id]}** masses.
+_ _ 
+_ _                               _ _     ᨻ  .     successful 
+_ _                     added  **{points}**  masses   ~~      ~~   {user.mention}
+_ _             ﹒    ׅthey now have **{review_counts[str(user.id)]}** masses.
 """
 
     await interaction.response.send_message(message)
+
+STAFF_ROLE_ID = 1418404679364251687  # put your staff role id here
+
+
+@bot.tree.command(name="music", description="open a mass ticket")
+async def ticket(interaction: discord.Interaction):
+
+    guild = interaction.guild
+    user = interaction.user
+
+    category = guild.get_channel(1427077235353063575)
+
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(view_channel=False),
+        user: discord.PermissionOverwrite(view_channel=True, send_messages=True),
+        guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True)
+    }
+
+    channel = await guild.create_text_channel(
+        name=f"w2p-{user.name}",
+        category=category,
+        overwrites=overwrites
+    )
+
+    message = f"""
+_ _
+_ _                               _ _        opened   __a__  ticket 
+_ _                     run  ` .mass  `  to  start   ~~      ~~   massing
+_ _                       ﹒    i hope you enjoy massing !*!*
+"""
+
+    await channel.send(f"{user.mention}\n{message}")
+
+    await interaction.response.send_message(
+        f"ticket created: {channel.mention}",
+        ephemeral=True
+    )
 
 import os
 bot.run(os.getenv("TOKEN"))
