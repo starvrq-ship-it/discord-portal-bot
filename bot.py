@@ -219,7 +219,9 @@ _ _                               _ _        opened   __a__  ticket
 _ _                     run  ` .mass  `  to  start   ~~      ~~   massing
 _ _                       ﹒    i hope you enjoy massing !*!*
 _ _
-""",)
+""",
+view=CloseTicketView()
+    )
 
 class CloseTicketView(discord.ui.View):
     @discord.ui.button(label="close ticket", style=discord.ButtonStyle.red)
