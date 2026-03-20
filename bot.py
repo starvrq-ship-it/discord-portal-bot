@@ -43,8 +43,8 @@ class MassInfoModal(discord.ui.Modal, title="mass info"):
 
         channel = interaction.channel
 
-        ad_msg = await channel.send(f"📢 **Server Ad:**\n{self.server_ad.value}")
-        link_msg = await channel.send(f"🔗 **Server Link:**\n{self.server_link.value}")
+        ad_msg = await channel.send(f"_ _             ⠀ ׁ     𓈒         server　　ad　﹕**\n{self.server_ad.value}")
+        link_msg = await channel.send(f"_ _             ⠀ ׁ     𓈒         server　　link　﹕**\n{self.server_link.value}")
 
         await ad_msg.pin()
         await link_msg.pin()
