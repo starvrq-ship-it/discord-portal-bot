@@ -26,7 +26,7 @@ GUILD_ID = 1418404678777180303  # your server ID
 REVIEW_CHANNEL_ID = 1430705928012824697  # review channel ID
 TICKET_LOG_CHANNEL = 1480708106827726929
 
-class MassInfoModal(discord.ui.Modal, title="Mass Info"):
+class MassInfoModal(discord.ui.Modal, title="mass info"):
 
     server_ad = discord.ui.TextInput(
         label="Server Ad",
@@ -67,7 +67,7 @@ class EditView(discord.ui.View):
         await interaction.response.send_modal(MassInfoModal())
 
 class StartMassView(discord.ui.View):
-    @discord.ui.button(label="Input Mass Info", style=discord.ButtonStyle.green)
+    @discord.ui.button(label="🌀", style=discord.ButtonStyle.black)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(MassInfoModal())
 
