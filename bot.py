@@ -67,7 +67,7 @@ class EditView(discord.ui.View):
         await interaction.response.send_modal(MassInfoModal())
 
 class StartMassView(discord.ui.View):
-    @discord.ui.button(label="🌀", style=discord.ButtonStyle.black)
+    @discord.ui.button(label="🌀", style=discord.ButtonStyle.blurple)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(MassInfoModal())
 
