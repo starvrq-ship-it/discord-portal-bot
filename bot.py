@@ -250,6 +250,8 @@ STAFF_ROLE_ID = 1418404679364251687  # put your staff role id here
 @bot.tree.command(name="music", description="open a mass ticket")
 async def ticket(interaction: discord.Interaction):
 
+    await interaction.response.defer(ephemeral=True)
+
     guild = interaction.guild
     user = interaction.user
 
@@ -272,52 +274,40 @@ async def ticket(interaction: discord.Interaction):
     await channel.send(
 """
 _ _
-_ _                               _ _        opened   __a__  ticket 
-_ _                     run  ` .mass  `  to  start   ~~      ~~   massing
-_ _                       ﹒    i hope you enjoy massing !*!*
+_ _　　　　　　　　𓈒　 ꜜ ㅤ𓂃ㅤ ❤︎    welcome 
+_ _　　　　　　　　⠾    ** click below**      ⠀ 𝄞 ⋆ˎˊ- ⠀
+_ _
 """,
 view=StartMassView()
 )
-
-class CloseTicketView(discord.ui.View):
-    @discord.ui.button(label="close ticket", style=discord.ButtonStyle.red)
-    async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
-
-        user = interaction.user
-        channel = interaction.channel
-        guild = interaction.guild
-
-        log_channel = guild.get_channel(TICKET_LOG_CHANNEL)
-
-        if log_channel:
-            await log_channel.send(
-f"""
- 　 　 　⇆ `　　　ticket closed
-
-User: {user.mention}
-Channel: {channel.name}
-Closed By: {interaction.user.mention}
-"""
-            )
-
-        await interaction.response.send_message("🔒 closing ticket in 5 seconds...")
-
-        await channel.edit(
-            overwrites={
-                guild.default_role: discord.PermissionOverwrite(view_channel=False)
-            }
-        )
-
-        await discord.utils.sleep_until(discord.utils.utcnow() + discord.timedelta(seconds=5))
-        await channel.delete()
-
-        await interaction.response.send_message(
-        f"ticket created: {channel.mention}",
-        ephemeral=True
-    )
     
+    await interaction.followup.send("🎟️ Ticket created!", ephemeral=True)
+
 @bot.command()
 async def close(ctx):
+
+    log_channel = bot.get_channel(TICKET_LOG_CHANNEL)
+
+    messages = []
+    async for msg in ctx.channel.history(limit=None, oldest_first=True):
+        messages.append(f"{msg.author}: {msg.content}")
+
+    transcript = "\n".join(messages)
+
+    if log_channel:
+        if len(transcript) > 1900:
+            with open("transcript.txt", "w", encoding="utf-8") as f:
+                f.write(transcript)
+
+            await log_channel.send(
+                f"📁 Transcript from {ctx.channel.name}",
+                file=discord.File("transcript.txt")
+            )
+        else:
+            await log_channel.send(
+                f"📁 Transcript from {ctx.channel.name}\n```{transcript}```"
+            )
+
     await ctx.send("Closing ticket...")
     await ctx.channel.delete()
 
