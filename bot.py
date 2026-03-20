@@ -113,6 +113,18 @@ _ _
 
 @bot.event
 async def on_ready():
+
+
+    await bot.change_presence(
+        status=discord.Status.online,
+        activity=discord.Activity(
+            type=discord.ActivityType.listening,
+            name="⚞     celeste's   portɑl     𓈃"
+        )
+    )
+
+    await bot.tree.sync()
+    print(f"Logged in as {bot.user}")
     guild = discord.Object(id=GUILD_ID)
 
     bot.tree.clear_commands(guild=guild)  # removes old ones
@@ -244,7 +256,7 @@ Closed By: {interaction.user.mention}
 """
             )
 
-        await interaction.response.send_message("🔒 slosing ticket in 5 seconds...")
+        await interaction.response.send_message("🔒 closing ticket in 5 seconds...")
 
         await channel.edit(
             overwrites={
