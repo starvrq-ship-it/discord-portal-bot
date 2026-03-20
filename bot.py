@@ -26,6 +26,51 @@ GUILD_ID = 1418404678777180303  # your server ID
 REVIEW_CHANNEL_ID = 1430705928012824697  # review channel ID
 TICKET_LOG_CHANNEL = 1480708106827726929
 
+class MassInfoModal(discord.ui.Modal, title="Mass Info"):
+
+    server_ad = discord.ui.TextInput(
+        label="Server Ad",
+        style=discord.TextStyle.paragraph,
+        required=True
+    )
+
+    server_link = discord.ui.TextInput(
+        label="Server Link",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+
+        channel = interaction.channel
+
+        ad_msg = await channel.send(f"📢 **Server Ad:**\n{self.server_ad.value}")
+        link_msg = await channel.send(f"🔗 **Server Link:**\n{self.server_link.value}")
+
+        await ad_msg.pin()
+        await link_msg.pin()
+
+        await channel.send(
+            "run `.access` to continue",
+            view=EditView(self.server_ad.value, self.server_link.value)
+        )
+
+        await interaction.response.send_message("Submitted!", ephemeral=True)
+
+class EditView(discord.ui.View):
+    def __init__(self, ad, link):
+        super().__init__()
+        self.ad = ad
+        self.link = link
+
+    @discord.ui.button(label="Edit", style=discord.ButtonStyle.blurple)
+    async def edit(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(MassInfoModal())
+
+class StartMassView(discord.ui.View):
+    @discord.ui.button(label="Input Mass Info", style=discord.ButtonStyle.green)
+    async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(MassInfoModal())
+
 class CloseTicketView(discord.ui.View):
     @discord.ui.button(label="close Ticket", style=discord.ButtonStyle.red)
     async def close_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -230,10 +275,9 @@ _ _
 _ _                               _ _        opened   __a__  ticket 
 _ _                     run  ` .mass  `  to  start   ~~      ~~   massing
 _ _                       ﹒    i hope you enjoy massing !*!*
-_ _
 """,
-view=CloseTicketView()
-    )
+view=StartMassView()
+)
 
 class CloseTicketView(discord.ui.View):
     @discord.ui.button(label="close ticket", style=discord.ButtonStyle.red)
@@ -271,6 +315,11 @@ Closed By: {interaction.user.mention}
         f"ticket created: {channel.mention}",
         ephemeral=True
     )
+    
+@bot.command()
+async def close(ctx):
+    await ctx.send("Closing ticket...")
+    await ctx.channel.delete()
 
 import os
 bot.run(os.getenv("TOKEN"))
