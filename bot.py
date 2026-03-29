@@ -318,19 +318,20 @@ class MassSelect(discord.ui.View):
     def __init__(self):
         super().__init__()
 
-        self.add_item(discord.ui.Select(
+        select = discord.ui.Select(
             placeholder="tag ur skips here",
             options=[
                 discord.SelectOption(label="tag as skip!", value="skip"),
                 discord.SelectOption(label="tag as invalid!", value="invalid"),
                 discord.SelectOption(label="reset!", value="reset"),
             ]
-        ))
+        )
 
-    @discord.ui.select()
-    async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+        select.callback = self.select_callback
+        self.add_item(select)
 
-        value = select.values[0]
+    async def select_callback(self, interaction: discord.Interaction):
+        value = interaction.data["values"][0]
 
         if value == "skip":
             await interaction.response.send_message("tagged successfully", ephemeral=True)
