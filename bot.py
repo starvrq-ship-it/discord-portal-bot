@@ -316,7 +316,7 @@ value : 0
 
 class MassSelect(discord.ui.View):
     def __init__(self):
-        super().__init__()
+        super().__init__(timeout=None)  # keeps it alive longer
 
         select = discord.ui.Select(
             placeholder="tag ur skips here",
@@ -333,18 +333,25 @@ class MassSelect(discord.ui.View):
     async def select_callback(self, interaction: discord.Interaction):
         value = interaction.data["values"][0]
 
+        # ✅ send private confirmation (like your original)
+        await interaction.response.send_message("tagged successfully", ephemeral=True)
+
+        # ✅ send result in the SAME channel (ticket channel)
         if value == "skip":
-            await interaction.response.send_message("tagged successfully", ephemeral=True)
-            await interaction.channel.send(f"{interaction.channel.mention} was tagged as skip")
+            await interaction.channel.send(
+                f"{interaction.user.mention} tagged this as **skip**"
+            )
 
         elif value == "invalid":
-            await interaction.response.send_message("tagged successfully", ephemeral=True)
-            await interaction.channel.send(f"{interaction.channel.mention} was tagged as invalid")
+            await interaction.channel.send(
+                f"{interaction.user.mention} tagged this as **invalid**"
+            )
 
         elif value == "reset":
-            await interaction.response.send_message("resetted!", ephemeral=True)
+            await interaction.channel.send("reset!")
 
-        await interaction.message.edit(view=None)
+        # ❌ DO NOT remove the menu (we removed this line)
+        # await interaction.message.edit(view=None)
 @bot.command()
 async def selectmenu(ctx):
     await ctx.send("Select an option:", view=MassSelect())
