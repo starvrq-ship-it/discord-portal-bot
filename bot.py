@@ -43,8 +43,8 @@ class MassInfoModal(discord.ui.Modal, title="mass info"):
 
         channel = interaction.channel
 
-        ad_msg = await channel.send(f"_ _             ⠀ ׁ     𓈒         server　　ad　﹕**\n{self.server_ad.value}")
-        link_msg = await channel.send(f"_ _             ⠀ ׁ     𓈒         server　　link　﹕**\n{self.server_link.value}")
+        ad_msg = await channel.send(f"\n{self.server_ad.value}")
+        link_msg = await channel.send(f"*\n{self.server_link.value}")
 
         await ad_msg.pin()
         await link_msg.pin()
@@ -54,7 +54,7 @@ class MassInfoModal(discord.ui.Modal, title="mass info"):
             view=EditView(self.server_ad.value, self.server_link.value)
         )
 
-        await interaction.response.send_message("Submitted!", ephemeral=True)
+        await interaction.response.send_message("submitted !", ephemeral=True)
 
 class EditView(discord.ui.View):
     def __init__(self, ad, link):
@@ -310,6 +310,43 @@ async def close(ctx):
 
     await ctx.send("Closing ticket...")
     await ctx.channel.delete()
+
+variable : ticket
+value : 0
+
+class MassSelect(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+        self.add_item(discord.ui.Select(
+            placeholder="tag ur skips here",
+            options=[
+                discord.SelectOption(label="tag as skip!", value="skip"),
+                discord.SelectOption(label="tag as invalid!", value="invalid"),
+                discord.SelectOption(label="reset!", value="reset"),
+            ]
+        ))
+
+    @discord.ui.select()
+    async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+
+        value = select.values[0]
+
+        if value == "skip":
+            await interaction.response.send_message("tagged successfully", ephemeral=True)
+            await interaction.channel.send(f"{interaction.channel.mention} was tagged as skip")
+
+        elif value == "invalid":
+            await interaction.response.send_message("tagged successfully", ephemeral=True)
+            await interaction.channel.send(f"{interaction.channel.mention} was tagged as invalid")
+
+        elif value == "reset":
+            await interaction.response.send_message("resetted!", ephemeral=True)
+
+        await interaction.message.edit(view=None)
+@bot.command()
+async def selectmenu(ctx):
+    await ctx.send("Select an option:", view=MassSelect())
 
 import os
 bot.run(os.getenv("TOKEN"))
