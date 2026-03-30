@@ -4,6 +4,8 @@ from discord import app_commands
 import json
 import os
 
+ticket_channels = {}
+
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -269,6 +271,8 @@ async def ticket(interaction: discord.Interaction):
         overwrites=overwrites
     )
 
+    ticket_channels[interaction.user.id] = channel.id
+
     await channel.send(user.mention, delete_after=5)
 
     await channel.send(
@@ -311,50 +315,58 @@ async def close(ctx):
     await ctx.send("Closing ticket...")
     await ctx.channel.delete()
 
-variable : ticket
-value : 0
-
-class MassSelect(discord.ui.View):
+class MassingSelect(discord.ui.Select):
     def __init__(self):
-        super().__init__(timeout=None)  # keeps it alive longer
+        options = [
+            discord.SelectOption(label="skip", value="skip", description="Tag as skip"),
+            discord.SelectOption(label="invalid", value="invalid", description="Tag as invalid"),
+            discord.SelectOption(label="reset", value="reset", description="Reset")
+        ]
 
-        select = discord.ui.Select(
-            placeholder="tag ur skips here",
-            options=[
-                discord.SelectOption(label="tag as skip!", value="skip"),
-                discord.SelectOption(label="tag as invalid!", value="invalid"),
-                discord.SelectOption(label="reset!", value="reset"),
-            ]
+        super().__init__(
+            placeholder="tag your skips here",
+            min_values=1,
+            max_values=1,
+            options=options
         )
 
-        select.callback = self.select_callback
-        self.add_item(select)
+    async def callback(self, interaction: discord.Interaction):
 
-    async def select_callback(self, interaction: discord.Interaction):
-        value = interaction.data["values"][0]
+        choice = self.values[0]
+        user_id = interaction.user.id
 
-        # ✅ send private confirmation (like your original)
-        await interaction.response.send_message("tagged successfully", ephemeral=True)
+        if user_id not in ticket_channels:
+            await interaction.response.send_message("No ticket found.", ephemeral=True)
+            return
 
-        # ✅ send result in the SAME channel (ticket channel)
-        if value == "skip":
-            await interaction.channel.send(
-                f"{interaction.user.mention} tagged this as **skip**"
-            )
+        ticket_channel = interaction.guild.get_channel(ticket_channels[user_id])
 
-        elif value == "invalid":
-            await interaction.channel.send(
-                f"{interaction.user.mention} tagged this as **invalid**"
-            )
+        if choice == "skip":
+            await interaction.response.send_message("tagged successfully", ephemeral=True)
+            await ticket_channel.send(f"<#{interaction.channel.id}> was tagged as skip")
 
-        elif value == "reset":
-            await interaction.channel.send("reset!")
+        elif choice == "invalid":
+            await interaction.response.send_message("tagged successfully", ephemeral=True)
+            await ticket_channel.send(f"<#{interaction.channel.id}> was tagged as invalid")
 
-        # ❌ DO NOT remove the menu (we removed this line)
-        # await interaction.message.edit(view=None)
+        elif choice == "reset":
+            await interaction.response.send_message("reset!", ephemeral=True)
+
+        self.view.stop()
+
+class MassingView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(MassingSelect())
+
 @bot.command()
 async def selectmenu(ctx):
-    await ctx.send("Select an option:", view=MassSelect())
+
+    await ctx.send(
+        "tag your skips here",
+        view=MassingView()
+    )
+
 
 import os
 bot.run(os.getenv("TOKEN"))
