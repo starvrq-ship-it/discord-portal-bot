@@ -204,8 +204,11 @@ async def on_ready():
 
 @bot.tree.command(name="review", description="submit a review")
 async def review(interaction: discord.Interaction):
-    await interaction.response.send_modal(ReviewModal())
-    
+    try:
+        await interaction.response.send_modal(ReviewModal())
+    except Exception as e:
+        print("ERROR:", e)
+
 @bot.tree.command(name="leaderboard", description="show top massers")
 async def leaderboard(interaction: discord.Interaction):
 
