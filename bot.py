@@ -127,56 +127,53 @@ class ReviewModal(discord.ui.Modal, title="mass review"):
         required=True
     )
 
-    async def on_submit(self, interaction: discord.Interaction):
-        # DEFER THE RESPONSE IMMEDIATELY
-        await interaction.response.defer(ephemeral=True)
+async def on_submit(self, interaction: discord.Interaction):
 
-        # Validate numbers
-        if not self.invites.value.isdigit() or not self.portals.value.isdigit() or not self.sep.value.isdigit():
-            await interaction.response.send_message(
-                "Invites, portals, and SEP must be numbers only.",
-                ephemeral=True
-            )
-            return
+    # ✅ THIS FIXES THE ERROR
+    await interaction.response.defer(ephemeral=True)
 
-        invites = int(self.invites.value)
-        portals = int(self.portals.value)
-        sep = int(self.sep.value)
-        server_link = self.server_link.value
-        toxicity = self.server_toxicity.value
-        server_type = self.server_type.value
+    # Validate numbers
+    if not self.invites.value.isdigit() or not self.portals.value.isdigit() or not self.sep.value.isdigit():
+        await interaction.followup.send(
+            "invites, portals, and sep must be numbers only."
+        )
+        return
 
-        user_id = str(interaction.user.id)
-        review_counts[user_id] = review_counts.get(user_id, 0) + 1
+    invites = int(self.invites.value)
+    portals = int(self.portals.value)
+    sep = int(self.sep.value)
 
-        # Save review counts
-        with open("reviews.json", "w") as f:
-            json.dump(review_counts, f)
+    server_link = self.server_link.value
+    toxicity = self.server_toxicity.value
+    server_type = self.server_type.value
 
-        channel = interaction.guild.get_channel(REVIEW_CHANNEL_ID)
+    user_id = str(interaction.user.id)
 
-        # message format
-        message_text = f"""
+    review_counts[user_id] = review_counts.get(user_id, 0) + 1
+
+    with open("reviews.json", "w") as f:
+        json.dump(review_counts, f)
+
+    channel = interaction.guild.get_channel(REVIEW_CHANNEL_ID)
+
+    message_text = f"""
 _ _
 _ _ 　 ⚞𓈒゜{invites}　 invites　  ᣟ◌　 +{portals}p
 -# _ _ 　 <:0_:1488029407192023141>     {sep}h ⎯ {toxicity} ({server_type}) ৲੭
 _ _ [⠀]({server_link})
 """
 
-        msg = await channel.send(message_text)
+    msg = await channel.send(message_text)
 
-        # Create thread and ping the user
-        thread = await msg.create_thread(
-            name=f"review - {interaction.user.name}"
-        )
-        await thread.send(f"{interaction.user.mention} thank u for massing !")
-                          
-        # Confirm submission
-        await interaction.response.send_message(
-            "review submitted !",
-            ephemeral=True
-        )
+    # ✅ Create thread + ping user
+    thread = await msg.create_thread(
+        name=f"review - {interaction.user.name}"
+    )
 
+    await thread.send(f"{interaction.user.mention}")
+
+    # ✅ Final response (NO MORE ERROR)
+    await interaction.followup.send("review submitted!")
 
 @bot.event
 async def on_ready():
@@ -205,11 +202,10 @@ async def on_ready():
     print(f"Synced {len(synced)} commands to guild {GUILD_ID}")
 
 
-@bot.tree.command(name="review", description="submit a mass review")
+@bot.tree.command(name="review", description="submit a review")
 async def review(interaction: discord.Interaction):
-    modal = ReviewModal()
-    await interaction.response.send_modal(modal)
-
+    await interaction.response.send_modal(ReviewModal())
+    
 @bot.tree.command(name="leaderboard", description="show top massers")
 async def leaderboard(interaction: discord.Interaction):
 
