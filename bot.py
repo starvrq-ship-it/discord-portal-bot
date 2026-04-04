@@ -88,38 +88,51 @@ class CloseTicketView(discord.ui.View):
         await discord.utils.sleep_until(discord.utils.utcnow() + discord.timedelta(seconds=5))
         await interaction.channel.delete()
 
-class ReviewModal(discord.ui.Modal, title="Mass Review"):
+class ReviewModal(discord.ui.Modal, title="mass review"):
 
     server_link = discord.ui.TextInput(
-        label="Server Invite Link",
+        label="server invite link",
         placeholder="https://discord.gg/...",
         required=True
     )
     
 
     invites = discord.ui.TextInput(
-        label="Invites Gained",
-        placeholder="Numbers only",
+        label="invites gained",
+        placeholder="numbers only",
         required=True
     )
 
     portals = discord.ui.TextInput(
-        label="Portals Posted",
-        placeholder="Numbers only",
+        label="portals posted",
+        placeholder="numbers only",
         required=True
     )
 
     sep = discord.ui.TextInput(
-        label="Sep Posted (hours)",
-        placeholder="Numbers only",
+        label="sep posted (hours)",
+        placeholder="numbers only",
+        required=True
+    )
+
+    server_toxicity = discord.ui.TextInput(
+        label="server toxicity",
+        placeholder="stox, ntox...",
+        required=True
+    )
+
+    server_type = discord.ui.TextInput(
+        label="server type",
+        placeholder="type of server",
         required=True
     )
 
     async def on_submit(self, interaction: discord.Interaction):
 
+        # Validate numbers
         if not self.invites.value.isdigit() or not self.portals.value.isdigit() or not self.sep.value.isdigit():
             await interaction.response.send_message(
-                "Invites, portals, and sep must be numbers only.",
+                "invites, portals, and sep must be numbers only.",
                 ephemeral=True
             )
             return
@@ -128,30 +141,35 @@ class ReviewModal(discord.ui.Modal, title="Mass Review"):
         portals = int(self.portals.value)
         sep = int(self.sep.value)
         server_link = self.server_link.value
+        toxicity = self.server_toxicity.value
+        server_type = self.server_type.value
 
         user_id = str(interaction.user.id)
-
         review_counts[user_id] = review_counts.get(user_id, 0) + 1
 
+        # Save review counts
         with open("reviews.json", "w") as f:
             json.dump(review_counts, f)
 
         channel = interaction.guild.get_channel(REVIEW_CHANNEL_ID)
 
+        # message format
         message_text = f"""
 _ _
- 　 　𝄞 　 `🎧`　　　{interaction.user.mention} has [massed]({self.server_link.value})
--# _ _  　 　 {invites}i　 +  {portals}p  for  {sep}h  sep
-
-  　 　 　ㅤ ׅ  ▶• ılıılıılılılıılıılı. 0 𝅄ㅤ
+_ _ 　 ⚞𓈒゜{invites}　 invites　  ᣟ◌　 +{portals}p
+-# _ _ 　 <:0_:1488029407192023141>     {sep}h ⎯ {toxicity} ({server_type}) ৲੭
+_ _ [⠀]({server_link})
 """
 
         msg = await channel.send(message_text)
 
-        await msg.create_thread(
+        # Create thread and ping the user
+        thread = await msg.create_thread(
             name=f"review - {interaction.user.name}"
         )
-
+        await thread.send(f"{interaction.user.mention} thank u for massing !")
+                          
+        # Confirm submission
         await interaction.response.send_message(
             "review submitted !",
             ephemeral=True
@@ -285,7 +303,10 @@ _ _
 view=StartMassView()
 )
     
-    await interaction.followup.send("🎟️ Ticket created!", ephemeral=True)
+    await interaction.followup.send(
+    f"your ticket has been created {channel.mention}",
+    ephemeral=True
+)
 
 @bot.command()
 async def close(ctx):
