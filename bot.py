@@ -128,11 +128,13 @@ class ReviewModal(discord.ui.Modal, title="mass review"):
     )
 
     async def on_submit(self, interaction: discord.Interaction):
+        # DEFER THE RESPONSE IMMEDIATELY
+        await interaction.response.defer(ephemeral=True)
 
         # Validate numbers
         if not self.invites.value.isdigit() or not self.portals.value.isdigit() or not self.sep.value.isdigit():
             await interaction.response.send_message(
-                "invites, portals, and sep must be numbers only.",
+                "Invites, portals, and SEP must be numbers only.",
                 ephemeral=True
             )
             return
@@ -178,8 +180,9 @@ _ _ [⠀]({server_link})
 
 @bot.event
 async def on_ready():
+    print(f"Logged in as {bot.user}")
 
-
+    # Set bot presence
     await bot.change_presence(
         status=discord.Status.online,
         activity=discord.Activity(
@@ -188,21 +191,24 @@ async def on_ready():
         )
     )
 
-    await bot.tree.sync()
-    print(f"Logged in as {bot.user}")
+    # Get guild object (optional if you want commands to be guild-only)
     guild = discord.Object(id=GUILD_ID)
 
-    bot.tree.clear_commands(guild=guild)  # removes old ones
+    # Clear old guild commands first
+    bot.tree.clear_commands(guild=guild)
+
+    # Copy global commands to guild (so they appear instantly)
     bot.tree.copy_global_to(guild=guild)
 
-    await bot.tree.sync(guild=guild)
-
-    print(f"Logged in as {bot.user}")
+    # Sync commands only once
+    synced = await bot.tree.sync(guild=guild)
+    print(f"Synced {len(synced)} commands to guild {GUILD_ID}")
 
 
 @bot.tree.command(name="review", description="submit a mass review")
 async def review(interaction: discord.Interaction):
-    await interaction.response.send_modal(ReviewModal())
+    modal = ReviewModal()
+    await interaction.response.send_modal(modal)
 
 @bot.tree.command(name="leaderboard", description="show top massers")
 async def leaderboard(interaction: discord.Interaction):
