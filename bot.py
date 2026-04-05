@@ -28,6 +28,19 @@ GUILD_ID = 1418404678777180303  # your server ID
 REVIEW_CHANNEL_ID = 1430705928012824697  # review channel ID
 TICKET_LOG_CHANNEL = 1480708106827726929
 
+from discord import app_commands
+import discord
+
+class ReviewModal(discord.ui.Modal, title="Test Modal"):
+    test_input = discord.ui.TextInput(label="Test", placeholder="type here")
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.send_message(f"You typed: {self.test_input.value}", ephemeral=True)
+
+@bot.tree.command(name="review", description="submit a test review")
+async def review(interaction: discord.Interaction):
+    await interaction.response.send_modal(ReviewModal())
+
 class MassInfoModal(discord.ui.Modal, title="mass info"):
 
     server_ad = discord.ui.TextInput(
@@ -179,27 +192,14 @@ _ _ [⠀]({server_link})
 async def on_ready():
     print(f"Logged in as {bot.user}")
 
-    # Set bot presence
-    await bot.change_presence(
-        status=discord.Status.online,
-        activity=discord.Activity(
-            type=discord.ActivityType.listening,
-            name="⚞     celeste's   portɑl     𓈃"
-        )
-    )
-
-    # Get guild object (optional if you want commands to be guild-only)
     guild = discord.Object(id=GUILD_ID)
-
-    # Clear old guild commands first
     bot.tree.clear_commands(guild=guild)
-
-    # Copy global commands to guild (so they appear instantly)
     bot.tree.copy_global_to(guild=guild)
-
-    # Sync commands only once
     synced = await bot.tree.sync(guild=guild)
-    print(f"Synced {len(synced)} commands to guild {GUILD_ID}")
+    print(f"Synced {len(synced)} commands")
+    print("Commands registered:")
+    for cmd in bot.tree.get_commands():
+        print(cmd.name)
 
 
 @bot.tree.command(name="review", description="submit a review")
