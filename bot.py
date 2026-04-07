@@ -37,7 +37,7 @@ class ReviewModal(discord.ui.Modal, title="Test Modal"):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.send_message(f"You typed: {self.test_input.value}", ephemeral=True)
 
-@bot.tree.command(name="review", description="submit a test review")
+@bot.tree.command(name="treview", description="submit a test review")
 async def review(interaction: discord.Interaction):
     await interaction.response.send_modal(ReviewModal())
 
