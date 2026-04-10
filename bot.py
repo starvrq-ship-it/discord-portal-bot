@@ -193,13 +193,9 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
 
     guild = discord.Object(id=GUILD_ID)
-    bot.tree.clear_commands(guild=guild)
-    bot.tree.copy_global_to(guild=guild)
+
     synced = await bot.tree.sync(guild=guild)
-    print(f"Synced {len(synced)} commands")
-    print("Commands registered:")
-    for cmd in bot.tree.get_commands():
-        print(cmd.name)
+    print(f"Synced {len(synced)} commands (guild only)")
 
 
 @bot.tree.command(name="review", description="submit a review")
